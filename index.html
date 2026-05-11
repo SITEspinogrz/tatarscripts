@@ -1,347 +1,371 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TATAR HUB OS</title>
-    
-    <!-- Библиотеки -->
-    <script src="https://js.puter.com/v2/"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <title>TATAR | Cloud OS v2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://js.puter.com/v2/"></script>
+    <link rel="stylesheet" data-name="vs/editor/editor.main" href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/editor/editor.main.min.css">
+    
     <style>
         :root {
-            --glass: rgba(255, 255, 255, 0.05);
-            --border: rgba(255, 255, 255, 0.2);
-            --bg: #050505;
-            --white: #ffffff;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.12);
+            --blur: blur(20px);
         }
 
-        * { box-sizing: border-box; -webkit-font-smoothing: antialiased; outline: none; }
-        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--white); font-family: 'Segoe UI', sans-serif; overflow: hidden; }
-
-        canvas#stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
-
-        .app-shell { display: flex; flex-direction: column; height: 100vh; padding: 10px; gap: 10px; }
-        .glass { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 12px; }
-
-        /* Верхняя Навигация */
-        .top-nav { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; min-height: 60px; }
-        .nav-tabs { display: flex; gap: 10px; }
-        .nav-btn { background: none; border: 1px solid transparent; color: var(--white); opacity: 0.5; padding: 8px 15px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 500; transition: 0.3s; }
-        .nav-btn:hover, .nav-btn.active { opacity: 1; border-color: var(--border); background: var(--glass); }
-
-        /* Контент */
-        .main-content { flex-grow: 1; position: relative; overflow: hidden; }
-        .page { display: none; height: 100%; flex-direction: column; gap: 10px; animation: fadeIn 0.3s ease; }
-        .page.active { display: flex; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Поиск и Сетки */
-        .search-box { width: 100%; padding: 12px; font-size: 1rem; color: #fff; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; overflow-y: auto; padding-bottom: 20px; }
-        .card { padding: 15px; border-radius: 10px; border: 1px solid var(--border); transition: 0.2s; cursor: pointer; text-align: center; }
-        .card:hover { background: rgba(255,255,255,0.1); border-color: #fff; }
-
-        /* Внутренние вкладки РЕДАКТОРА */
-        .editor-header { display: flex; justify-content: space-between; align-items: center; padding: 5px 10px; border-bottom: 1px solid var(--border); }
-        .editor-tabs { display: flex; gap: 5px; }
-        .e-tab { padding: 5px 12px; font-size: 0.75rem; cursor: pointer; opacity: 0.5; border-radius: 5px; }
-        .e-tab.active { opacity: 1; background: rgba(255,255,255,0.1); }
-
-        /* Редактор и Чат */
-        #monaco-root { flex-grow: 1; overflow: hidden; border-radius: 0 0 10px 10px; }
-        .ai-wrap { flex-grow: 1; display: none; flex-direction: column; padding: 15px; }
-        .ai-wrap.active { display: flex; }
-        #chat-history { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .bubble { padding: 10px; border-radius: 8px; font-size: 0.85rem; max-width: 85%; line-height: 1.4; }
-        .bubble.ai { background: rgba(255,255,255,0.1); align-self: flex-start; border-left: 2px solid #fff; }
-        .bubble.user { background: rgba(255,255,255,0.05); align-self: flex-end; }
-
-        /* Кнопки и Инпуты */
-        input, button, textarea { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); color: #fff; border-radius: 6px; padding: 10px; }
-        button { background: #fff; color: #000; font-weight: bold; cursor: pointer; border: none; font-size: 0.75rem; }
-        button.border { background: transparent; color: #fff; border: 1px solid #fff; }
-        button:active { transform: scale(0.96); }
-
-        /* Центрирование форм */
-        .auth-container { max-width: 350px; margin: auto; padding: 30px; display: flex; flex-direction: column; gap: 15px; text-align: center; }
-
-        @media (max-width: 750px) {
-            .nav-btn span { display: none; }
-            .top-nav { padding: 5px 10px; }
-            .grid { grid-template-columns: 1fr 1fr; }
+        body {
+            background-color: #050505;
+            color: white;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 0;
+            /* Исправление для мобильных браузеров */
+            height: 100vh;
+            height: 100dvh; 
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
+
+        #starfield {
+            position: fixed;
+            top: 0; left: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .glass {
+            background: var(--glass);
+            backdrop-filter: var(--blur);
+            -webkit-backdrop-filter: var(--blur);
+            border: 1px solid var(--border);
+        }
+
+        .nav-btn.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-bottom: 2px solid white;
+        }
+
+        /* Оптимизация скролла */
+        .custom-scroll {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.1) transparent;
+        }
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+
+        /* Контейнер редактора */
+        #monaco-outer {
+            flex: 1;
+            min-height: 0; /* Важно для flex-контейнеров */
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .tab-content { 
+            display: none; 
+            height: 100%;
+            flex-direction: column;
+        }
+        .tab-content.active { display: flex; }
+
+        input, button { touch-action: manipulation; }
     </style>
 </head>
 <body>
 
-<canvas id="stars"></canvas>
+    <canvas id="starfield"></canvas>
 
-<div class="app-shell">
-    <!-- ГЛАВНОЕ МЕНЮ СВЕРХУ -->
-    <nav class="top-nav glass">
-        <div style="font-weight: 800; letter-spacing: 1px;">TATAR HUB</div>
-        <div class="nav-tabs">
-            <button class="nav-btn active" onclick="nav('home', this)"><i data-lucide="search"></i><span>EXPLORE</span></button>
-            <button class="nav-btn" onclick="nav('editor', this)"><i data-lucide="code"></i><span>EDITOR</span></button>
-            <button class="nav-btn" onclick="nav('auth', this)"><i data-lucide="user"></i><span>ACCOUNT</span></button>
+    <!-- MAIN UI WRAPPER -->
+    <main class="relative z-10 flex flex-col h-full w-full p-3 md:p-6 gap-3 md:gap-4 overflow-hidden">
+        
+        <!-- HEADER NAV -->
+        <nav class="glass rounded-2xl p-1.5 flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-2 px-3">
+                <i data-lucide="cloud-lightning" class="w-4 h-4 md:w-5 md:h-5"></i>
+                <span class="font-bold tracking-tighter text-xs md:text-sm">TATAR <span class="font-thin opacity-40">OS</span></span>
+            </div>
+            
+            <div class="flex gap-1">
+                <button onclick="switchTab('explore')" class="nav-btn active px-3 py-1.5 rounded-lg text-[10px] uppercase font-bold tracking-widest flex items-center gap-2">
+                    <i data-lucide="search" size="12"></i> <span class="hidden md:inline">Explore</span>
+                </button>
+                <button onclick="switchTab('editor')" class="nav-btn px-3 py-1.5 rounded-lg text-[10px] uppercase font-bold tracking-widest flex items-center gap-2">
+                    <i data-lucide="code" size="12"></i> <span class="hidden md:inline">Editor</span>
+                </button>
+                <button onclick="switchTab('account')" class="nav-btn px-3 py-1.5 rounded-lg text-[10px] uppercase font-bold tracking-widest flex items-center gap-2">
+                    <i data-lucide="user" size="12"></i> <span class="hidden md:inline">Account</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- CONTENT AREA -->
+        <div class="flex-1 min-h-0 relative">
+            
+            <!-- EXPLORE -->
+            <div id="explore" class="tab-content active gap-4">
+                <div class="glass p-2 rounded-xl flex gap-2 shrink-0">
+                    <input type="text" id="search-bar" placeholder="Search scripts..." class="flex-1 bg-transparent border-none px-3 text-sm focus:outline-none">
+                    <button onclick="loadScripts()" class="p-2 hover:bg-white/5 rounded-lg"><i data-lucide="refresh-cw" size="18"></i></button>
+                </div>
+                <div id="scripts-grid" class="grid grid-cols-1 md:grid-cols-3 gap-3 overflow-y-auto custom-scroll pb-10">
+                    <div class="glass p-10 text-center opacity-30 text-xs uppercase tracking-widest col-span-full">Initialize account to load data</div>
+                </div>
+            </div>
+
+            <!-- EDITOR (The Core) -->
+            <div id="editor" class="tab-content gap-3">
+                <div class="flex flex-col lg:flex-row gap-3 h-full min-h-0">
+                    
+                    <!-- Editor Block -->
+                    <div class="flex-[3] flex flex-col min-h-0">
+                        <div class="flex gap-1 mb-2 shrink-0">
+                            <button onclick="setEditorView('lua')" id="lua-tab-btn" class="glass px-4 py-1.5 text-[9px] font-black rounded-t-lg border-b-2 border-white">LUA</button>
+                            <button onclick="setEditorView('ai')" id="ai-tab-btn" class="glass px-4 py-1.5 text-[9px] font-black rounded-t-lg opacity-40">AI ASSISTANT</button>
+                        </div>
+                        
+                        <div id="lua-view" class="flex-1 flex flex-col min-h-0">
+                            <div id="monaco-outer" class="glass border-white/10">
+                                <div id="monaco-container" class="h-full w-full"></div>
+                            </div>
+                            <!-- Action Buttons -->
+                            <div class="grid grid-cols-2 md:flex gap-2 mt-2 shrink-0">
+                                <button onclick="saveToCloud()" class="bg-white text-black font-black text-[10px] py-2.5 px-4 rounded-lg flex items-center justify-center gap-2">
+                                    <i data-lucide="save" size="14"></i> SAVE
+                                </button>
+                                <button onclick="obfuscateCode()" class="glass font-bold text-[10px] py-2.5 px-4 rounded-lg flex items-center justify-center gap-2">
+                                    <i data-lucide="shield" size="14"></i> OBFUSCATE
+                                </button>
+                                <button onclick="generateLoadstring()" class="glass font-bold text-[10px] py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 col-span-2 md:col-auto">
+                                    <i data-lucide="link" size="14"></i> COPY LOADSTRING
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="ai-view" class="hidden flex-1 flex flex-col min-h-0 glass rounded-xl p-3">
+                            <div id="chat-history" class="flex-1 overflow-y-auto custom-scroll space-y-3 mb-3 text-xs pr-2">
+                                <div class="opacity-40 italic text-center py-10 text-[10px]">AI ready to help with Lua 5.1</div>
+                            </div>
+                            <div class="flex gap-2 shrink-0">
+                                <input type="text" id="ai-input" placeholder="Ask AI..." class="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-xs">
+                                <button onclick="askAI()" class="bg-white text-black px-4 rounded-lg font-black text-[10px]">SEND</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Side Tools -->
+                    <div class="flex-1 flex flex-col gap-3 shrink-0 lg:max-w-[300px]">
+                        <div class="glass p-4 rounded-xl">
+                            <label class="text-[9px] font-black opacity-30 uppercase mb-2 block tracking-tighter">Project Protection</label>
+                            <input type="password" id="master-pass" placeholder="Master Key" class="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs mb-1">
+                        </div>
+                        <div class="glass p-4 rounded-xl flex-1 hidden md:flex flex-col min-h-0">
+                            <label class="text-[9px] font-black opacity-30 uppercase mb-2 block tracking-tighter">Security Log</label>
+                            <div id="security-log" class="text-[10px] font-mono text-green-500/70 overflow-y-auto custom-scroll">
+                                > System idle...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACCOUNT -->
+            <div id="account" class="tab-content items-center justify-center">
+                <div class="glass p-8 rounded-3xl w-full max-w-sm text-center">
+                    <i data-lucide="fingerprint" size="40" class="mx-auto mb-4 opacity-20"></i>
+                    <h2 class="text-sm font-black tracking-widest mb-6">CLOUD ACCESS</h2>
+                    <div class="space-y-3">
+                        <input type="text" id="auth-user" placeholder="Username" class="w-full bg-white/5 border border-white/10 p-3 rounded-xl text-sm">
+                        <input type="password" id="auth-pass" placeholder="Password" class="w-full bg-white/5 border border-white/10 p-3 rounded-xl text-sm">
+                        <button onclick="handleAuth('login')" class="w-full bg-white text-black font-black py-3 rounded-xl text-xs">LOGIN</button>
+                        <button onclick="handleAuth('register')" class="w-full glass py-3 rounded-xl text-xs font-bold opacity-60">CREATE ACCOUNT</button>
+                    </div>
+                </div>
+            </div>
+
         </div>
-    </nav>
-
-    <main class="main-content">
-        <!-- ГЛАВНАЯ: ПОИСК -->
-        <section id="p-home" class="page active">
-            <input type="text" id="global-search" class="glass search-box" placeholder="Search community scripts..." oninput="searchScripts()">
-            <div class="grid" id="script-grid"></div>
-        </section>
-
-        <!-- РЕДАКТОР С ВКЛАДКАМИ -->
-        <section id="p-editor" class="page glass">
-            <div class="editor-header">
-                <div class="editor-tabs">
-                    <span class="e-tab active" onclick="eTab('code')">SCRIPT.LUA</span>
-                    <span class="e-tab" onclick="eTab('ai')">AI ASSISTANT</span>
-                </div>
-                <div style="display:flex; gap:8px;">
-                    <input type="text" id="ed-name" placeholder="Name" style="height:25px; font-size:10px; width:100px;">
-                    <input type="password" id="ed-pass" placeholder="Pass" style="height:25px; font-size:10px; width:80px;">
-                    <button onclick="deploy()" style="height:25px; padding:0 10px;">SAVE</button>
-                </div>
-            </div>
-            
-            <div id="monaco-root"></div>
-            
-            <div id="ai-section" class="ai-wrap">
-                <div id="chat-history"></div>
-                <div style="display:flex; gap:8px; margin-top:10px;">
-                    <input type="text" id="ai-input" placeholder="Ask AI to write logic..." style="flex:1;">
-                    <button onclick="askAI()">GENERATE</button>
-                </div>
-            </div>
-
-            <div class="editor-header" style="border-top:1px solid var(--border); border-bottom:none;">
-                <div style="display:flex; gap:10px;">
-                    <button class="border" onclick="obfuscate()" style="height:25px;">OBFUSCATE</button>
-                    <button class="border" onclick="copyLink()" style="height:25px;">COPY LINK</button>
-                </div>
-                <div id="user-info" style="font-size: 10px; opacity:0.4;">Guest Mode</div>
-            </div>
-        </section>
-
-        <!-- АККАУНТ -->
-        <section id="p-auth" class="page">
-            <div class="auth-container glass" id="auth-ui">
-                <h2 id="auth-title">WELCOME</h2>
-                <input type="text" id="login-user" placeholder="Username">
-                <input type="password" id="login-pass" placeholder="Password">
-                <button onclick="authAction('login')">SIGN IN</button>
-                <span style="font-size:0.7rem; opacity:0.5; cursor:pointer;" onclick="toggleAuth(true)">New here? Create Account</span>
-            </div>
-        </section>
     </main>
-</div>
 
-<script>
-    // --- ДАННЫЕ ---
-    const DB = {
-        TK: "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",
-        RP: "SITEspinogrz/tatarscripts",
-        OK: "d6eee16f-4aee-b083-6b0c-80fd3996c669e97b"
-    };
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
+    <script>
+        const CFG = {
+            token: "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",
+            repo: "SITEspinogrz/tatarscripts",
+            obf: "d6eee16f-4aee-b083-6b0c-80fd3996c669e97b"
+        };
 
-    let editor, currentUser = null;
-    lucide.createIcons();
+        let editor, currentUser = null, activeFile = null;
 
-    // --- ЗВЕЗДЫ ---
-    const canvas = document.getElementById('stars');
-    const ctx = canvas.getContext('2d');
-    function drawStars() {
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        ctx.fillStyle = "#fff";
-        for(let i=0; i<100; i++) {
-            ctx.globalAlpha = Math.random();
-            ctx.beginPath(); ctx.arc(Math.random()*canvas.width, Math.random()*canvas.height, 1, 0, Math.PI*2); ctx.fill();
-        }
-        setTimeout(() => requestAnimationFrame(drawStars), 200);
-    }
-    drawStars();
+        // --- OPTIMIZED STARFIELD ---
+        const canvas = document.getElementById('starfield');
+        const ctx = canvas.getContext('2d');
+        let stars = [];
+        const isMobile = window.innerWidth < 768;
 
-    // --- НАВИГАЦИЯ ---
-    function nav(page, btn) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('p-'+page).classList.add('active');
-        btn.classList.add('active');
-        if(page === 'home') syncScripts();
-    }
-
-    function eTab(type) {
-        document.querySelectorAll('.e-tab').forEach(t => t.classList.remove('active'));
-        event.target.classList.add('active');
-        document.getElementById('monaco-root').style.display = (type === 'code' ? 'block' : 'none');
-        document.getElementById('ai-section').classList.toggle('active', type === 'ai');
-    }
-
-    function toggleAuth(reg) {
-        document.getElementById('auth-title').innerText = reg ? "REGISTER" : "WELCOME";
-        const btn = document.querySelector('#auth-ui button');
-        btn.innerText = reg ? "CREATE ACCOUNT" : "SIGN IN";
-        btn.onclick = () => authAction(reg ? 'reg' : 'login');
-    }
-
-    // --- МОНАКО ---
-    require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs' } });
-    require(['vs/editor/editor.main'], () => {
-        editor = monaco.editor.create(document.getElementById('monaco-root'), {
-            value: "-- TATAR CLOUD EDITOR\nprint('System Ready')",
-            language: 'lua', theme: 'vs-dark', fontSize: 13, automaticLayout: true, minimap: {enabled:false}
-        });
-    });
-
-    // --- АВТОРИЗАЦИЯ ---
-    async function authAction(mode) {
-        const u = document.getElementById('login-user').value;
-        const p = document.getElementById('login-pass').value;
-        if(!u || !p) return alert("Missing data");
-
-        const uH = CryptoJS.SHA256(u).toString();
-        const pH = CryptoJS.SHA256(p).toString();
-        const path = `users/${uH}.json`;
-
-        if(mode === 'reg') {
-            const res = await fetch(`https://api.github.com/repos/${DB.RP}/contents/${path}`, {
-                method: 'PUT', headers: {Authorization: `token ${DB.TK}`},
-                body: JSON.stringify({message: "User Reg", content: btoa(JSON.stringify({p: pH}))})
-            });
-            if(res.ok) alert("Account Created! Please login.");
-        } else {
-            const res = await fetch(`https://api.github.com/repos/${DB.RP}/contents/${path}`, {
-                headers: {Authorization: `token ${DB.TK}`}
-            });
-            if(res.ok) {
-                const data = JSON.parse(atob((await res.json()).content));
-                if(data.p === pH) {
-                    currentUser = u;
-                    document.getElementById('user-info').innerText = "Logged as: " + u;
-                    alert("Auth Success!");
-                    nav('editor', document.querySelector('[onclick*="editor"]'));
-                } else alert("Invalid Password");
-            } else alert("User not found");
-        }
-    }
-
-    // --- СОХРАНЕНИЕ / ОБНОВЛЕНИЕ ---
-    async function deploy() {
-        if(!currentUser) return alert("Login first!");
-        const nm = document.getElementById('ed-name').value;
-        const ps = document.getElementById('ed-pass').value;
-        const code = editor.getValue();
-
-        // Security Scan
-        const danger = ["os.execute", "PostAsync", "os.remove", "gethwid"];
-        for(let d of danger) if(code.includes(d)) return alert("MALICIOUS CODE BLOCKED: " + d);
-
-        if(!nm || !ps) return alert("Fill Name/Password");
-        const pH = CryptoJS.SHA256(ps).toString();
-        const path = `scripts/${nm}.lua`;
-        const body = `-- [[ AUTH:${pH} | USER:${currentUser} ]]\n${code}`;
-
-        const check = await fetch(`https://api.github.com/repos/${DB.RP}/contents/${path}`, {
-            headers: {Authorization: `token ${DB.TK}`}
-        });
-
-        let sha;
-        if(check.ok) {
-            const data = await check.json();
-            if(!atob(data.content).includes(pH)) return alert("Wrong project password!");
-            sha = data.sha;
+        function resize() {
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = window.innerWidth * dpr;
+            canvas.height = window.innerHeight * dpr;
+            ctx.scale(dpr, dpr);
+            initStars();
         }
 
-        const res = await fetch(`https://api.github.com/repos/${DB.RP}/contents/${path}`, {
-            method: 'PUT', headers: {Authorization: `token ${DB.TK}`},
-            body: JSON.stringify({message: "Deploy "+nm, content: btoa(unescape(encodeURIComponent(body))), sha})
-        });
-        if(res.ok) alert("Synced to Cloud!");
-    }
-
-    // --- ПОИСК ---
-    async function syncScripts() {
-        const res = await fetch(`https://api.github.com/repos/${DB.RP}/contents/scripts`, {
-            headers: {Authorization: `token ${DB.TK}`}
-        });
-        if(res.ok) {
-            window.scripts = await res.json();
-            renderList(window.scripts);
-        }
-    }
-
-    function renderList(files) {
-        const grid = document.getElementById('script-grid'); grid.innerHTML = '';
-        files.forEach(f => {
-            const d = document.createElement('div'); d.className = 'card glass';
-            d.innerHTML = `<b>${f.name.replace('.lua','')}</b><br><small style="opacity:0.5">Cloud Storage</small>`;
-            d.onclick = () => loadScript(f.path);
-            grid.appendChild(d);
-        });
-    }
-
-    async function loadScript(p) {
-        const res = await fetch(`https://api.github.com/repos/${DB.RP}/contents/${p}`, {
-            headers: {Authorization: `token ${DB.TK}`}
-        });
-        if(res.ok) {
-            const data = await res.json();
-            const raw = decodeURIComponent(escape(atob(data.content)));
-            editor.setValue(raw.split('\n').slice(1).join('\n'));
-            document.getElementById('ed-name').value = data.name.replace('.lua','');
-            nav('editor', document.querySelector('[onclick*="editor"]'));
-        }
-    }
-
-    function searchScripts() {
-        const q = document.getElementById('global-search').value.toLowerCase();
-        renderList(window.scripts.filter(f => f.name.toLowerCase().includes(q)));
-    }
-
-    // --- AI ---
-    async function askAI() {
-        const q = document.getElementById('ai-input').value; if(!q) return;
-        addMsg('user', q); document.getElementById('ai-input').value = '';
-        try {
-            const res = await puter.ai.chat("Explain or write Roblox Lua code for: " + q);
-            addMsg('ai', res.toString());
-            if(res.toString().includes("```lua")) {
-                const snip = res.toString().split("```lua")[1].split("```")[0];
-                editor.setValue(editor.getValue() + "\n\n-- AI Snippet:\n" + snip.trim());
+        function initStars() {
+            stars = [];
+            const count = isMobile ? 80 : 200; // Оптимизация количества
+            for (let i = 0; i < count; i++) {
+                stars.push({
+                    x: Math.random() * window.innerWidth,
+                    y: Math.random() * window.innerHeight,
+                    s: Math.random() * 1.2,
+                    o: Math.random(),
+                    v: Math.random() * 0.02
+                });
             }
-        } catch(e) { addMsg('ai', "AI Connection failed."); }
-    }
+        }
 
-    function addMsg(t, x) {
-        const c = document.getElementById('chat-history');
-        const d = document.createElement('div'); d.className = `bubble ${t}`; d.innerText = x;
-        c.appendChild(d); c.scrollTop = c.scrollHeight;
-    }
-
-    async function obfuscate() {
-        try {
-            const res = await fetch('https://luaobfuscator.com/api/obfuscator/newscript', {
-                method: 'POST', headers: {'Content-Type': 'application/json', apikey: DB.OK},
-                body: JSON.stringify({script: editor.getValue(), options: {Virtualize: true}})
+        function animate() {
+            ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+            ctx.fillStyle = "white";
+            stars.forEach(s => {
+                s.o += s.v;
+                if(s.o > 1 || s.o < 0) s.v = -s.v;
+                ctx.globalAlpha = s.o;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.s, 0, Math.PI*2);
+                ctx.fill();
             });
-            const data = await res.json();
-            if(data.code) editor.setValue(data.code);
-        } catch(e) { alert("Obfuscator Offline"); }
-    }
+            requestAnimationFrame(animate);
+        }
+        window.addEventListener('resize', resize);
+        resize(); animate();
 
-    function copyLink() {
-        const nm = document.getElementById('ed-name').value;
-        navigator.clipboard.writeText(`loadstring(game:HttpGet("https://raw.githubusercontent.com/${DB.RP}/main/scripts/${nm}.lua"))()`);
-        alert("Loadstring copied!");
-    }
-</script>
+        // --- CORE SYSTEM ---
+        function switchTab(id) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            event.currentTarget.classList.add('active');
+            if(id === 'explore' && currentUser) loadScripts();
+        }
+
+        function setEditorView(v) {
+            document.getElementById('lua-view').classList.toggle('hidden', v !== 'lua');
+            document.getElementById('ai-view').classList.toggle('hidden', v !== 'ai');
+            document.getElementById('lua-tab-btn').style.opacity = v === 'lua' ? '1' : '0.4';
+            document.getElementById('ai-tab-btn').style.opacity = v === 'ai' ? '1' : '0.4';
+        }
+
+        require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs' }});
+        require(['vs/editor/editor.main'], () => {
+            editor = monaco.editor.create(document.getElementById('monaco-container'), {
+                value: '-- TATAR OS Ready\nprint("Hello mobile world")',
+                language: 'lua',
+                theme: 'vs-dark',
+                automaticLayout: true,
+                fontSize: 13,
+                minimap: { enabled: false },
+                lineNumbers: "on",
+                backgroundColor: 'rgba(0,0,0,0)'
+            });
+        });
+
+        // --- API HELPERS ---
+        async function gh(path, method = 'GET', body = null) {
+            const res = await fetch(`https://api.github.com/repos/${CFG.repo}/contents/${path}`, {
+                method,
+                headers: { 'Authorization': `token ${CFG.token}`, 'Accept': 'application/vnd.github.v3+json' },
+                body: body ? JSON.stringify(body) : null
+            });
+            return res.json();
+        }
+
+        async function handleAuth(type) {
+            const u = document.getElementById('auth-user').value;
+            const p = document.getElementById('auth-pass').value;
+            if(!u || !p) return;
+            const hash = CryptoJS.SHA256(p).toString();
+            const path = `users/${u}.json`;
+
+            if(type === 'register') {
+                const data = btoa(JSON.stringify({ u, pass: hash }));
+                await gh(path, 'PUT', { message: `reg ${u}`, content: data });
+                alert("Success!");
+            } else {
+                const res = await gh(path);
+                if(res.content && JSON.parse(atob(res.content)).pass === hash) {
+                    currentUser = u;
+                    switchTab('explore');
+                } else alert("Error!");
+            }
+        }
+
+        async function loadScripts() {
+            const grid = document.getElementById('scripts-grid');
+            grid.innerHTML = '<div class="col-span-full opacity-50 text-[10px]">FETCHING DATA...</div>';
+            const data = await gh('scripts');
+            grid.innerHTML = '';
+            if(Array.isArray(data)) {
+                data.forEach(f => {
+                    if(!f.name.endsWith('.lua')) return;
+                    const el = document.createElement('div');
+                    el.className = "glass p-4 rounded-xl flex justify-between items-center";
+                    el.innerHTML = `<div><div class="text-xs font-bold">${f.name}</div><div class="text-[9px] opacity-30 uppercase">Script File</div></div>
+                                    <button onclick="openS('${f.path}')" class="bg-white/10 p-2 rounded-lg hover:bg-white hover:text-black transition"><i data-lucide="edit-3" size="14"></i></button>`;
+                    grid.appendChild(el);
+                });
+                lucide.createIcons();
+            }
+        }
+
+        async function openS(path) {
+            const res = await gh(path);
+            editor.setValue(atob(res.content));
+            activeFile = { path, sha: res.sha };
+            switchTab('editor');
+        }
+
+        async function saveToCloud() {
+            if(!currentUser) return alert("Login first");
+            const code = editor.getValue();
+            const dangerous = ["os.execute", "PostAsync", "gethwid", "crash"].some(t => code.includes(t));
+            if(dangerous) return alert("SECURITY ALERT: Malicious code detected. Save blocked.");
+
+            const name = prompt("File name:", activeFile ? activeFile.path.split('/').pop() : "script.lua");
+            if(!name) return;
+
+            const res = await gh(`scripts/${name}`, 'PUT', {
+                message: `update ${name}`,
+                content: btoa(code),
+                sha: activeFile?.sha
+            });
+            if(res.content) alert("Saved!");
+        }
+
+        async function askAI() {
+            const q = document.getElementById('ai-input').value;
+            if(!q) return;
+            const hist = document.getElementById('chat-history');
+            hist.innerHTML += `<div class="bg-white/5 p-2 rounded-lg ml-4">${q}</div>`;
+            document.getElementById('ai-input').value = '';
+            
+            const res = await puter.ai.chat(q + " (Return only Lua code blocks if possible)");
+            hist.innerHTML += `<div class="bg-white/10 p-2 rounded-lg mr-4 border border-white/5">${res.message.content}</div>`;
+            hist.scrollTop = hist.scrollHeight;
+        }
+
+        function generateLoadstring() {
+            if(!activeFile) return alert("Save to cloud first");
+            const url = `https://raw.githubusercontent.com/${CFG.repo}/main/${activeFile.path}`;
+            navigator.clipboard.writeText(`loadstring(game:HttpGet("${url}"))()`);
+            alert("Copied!");
+        }
+
+        lucide.createIcons();
+    </script>
 </body>
 </html>
