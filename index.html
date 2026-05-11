@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TATAR CLOUD OS | WHITE GLASS</title>
+    <title>TATAR HUB OS</title>
     
-    <!-- Скрипты библиотек -->
-    <script src="https://js.puter.com/v2/"></script> <!-- Бесплатный ИИ -->
+    <!-- Библиотеки -->
+    <script src="https://js.puter.com/v2/"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -15,125 +15,138 @@
         :root {
             --glass: rgba(255, 255, 255, 0.05);
             --border: rgba(255, 255, 255, 0.2);
+            --bg: #050505;
             --white: #ffffff;
-            --bg: #080808;
         }
 
         * { box-sizing: border-box; -webkit-font-smoothing: antialiased; outline: none; }
         body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--white); font-family: 'Segoe UI', sans-serif; overflow: hidden; }
 
-        /* Белые звезды */
-        #stars-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+        canvas#stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
 
-        .app { display: flex; flex-direction: column; height: 100vh; padding: 12px; gap: 12px; }
-        .glass { background: var(--glass); backdrop-filter: blur(25px); border: 1px solid var(--border); border-radius: 16px; }
+        .app-shell { display: flex; flex-direction: column; height: 100vh; padding: 10px; gap: 10px; }
+        .glass { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 12px; }
 
-        /* Навигация */
-        nav { display: flex; justify-content: space-between; padding: 12px 20px; align-items: center; min-height: 60px; }
-        .nav-links { display: flex; gap: 20px; }
-        .nav-links i { cursor: pointer; opacity: 0.5; transition: 0.3s; }
-        .nav-links i:hover, .nav-links i.active { opacity: 1; transform: scale(1.1); }
+        /* Верхняя Навигация */
+        .top-nav { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; min-height: 60px; }
+        .nav-tabs { display: flex; gap: 10px; }
+        .nav-btn { background: none; border: 1px solid transparent; color: var(--white); opacity: 0.5; padding: 8px 15px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 500; transition: 0.3s; }
+        .nav-btn:hover, .nav-btn.active { opacity: 1; border-color: var(--border); background: var(--glass); }
 
-        /* Страницы */
-        .page { display: none; height: 100%; flex-direction: column; gap: 12px; overflow: hidden; animation: fadeIn 0.3s ease; }
+        /* Контент */
+        .main-content { flex-grow: 1; position: relative; overflow: hidden; }
+        .page { display: none; height: 100%; flex-direction: column; gap: 10px; animation: fadeIn 0.3s ease; }
         .page.active { display: flex; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Поиск и Списки */
-        .search-area { padding: 15px; width: 100%; font-size: 1rem; border-radius: 10px; }
-        .script-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; overflow-y: auto; }
-        .card { padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; position: relative; }
-        .card:hover { background: rgba(255, 255, 255, 0.1); border-color: #fff; }
+        /* Поиск и Сетки */
+        .search-box { width: 100%; padding: 12px; font-size: 1rem; color: #fff; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; overflow-y: auto; padding-bottom: 20px; }
+        .card { padding: 15px; border-radius: 10px; border: 1px solid var(--border); transition: 0.2s; cursor: pointer; text-align: center; }
+        .card:hover { background: rgba(255,255,255,0.1); border-color: #fff; }
 
-        /* Редактор */
-        #monaco-editor { flex-grow: 1; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
-        .tools { display: flex; gap: 8px; padding: 8px; flex-wrap: wrap; }
+        /* Внутренние вкладки РЕДАКТОРА */
+        .editor-header { display: flex; justify-content: space-between; align-items: center; padding: 5px 10px; border-bottom: 1px solid var(--border); }
+        .editor-tabs { display: flex; gap: 5px; }
+        .e-tab { padding: 5px 12px; font-size: 0.75rem; cursor: pointer; opacity: 0.5; border-radius: 5px; }
+        .e-tab.active { opacity: 1; background: rgba(255,255,255,0.1); }
 
-        /* ИИ Чат */
-        .chat-wrap { flex-grow: 1; display: flex; flex-direction: column; padding: 15px; overflow: hidden; }
-        #chat-content { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 10px; }
-        .bubble { padding: 10px 15px; border-radius: 12px; max-width: 85%; font-size: 0.9rem; line-height: 1.4; }
-        .bubble.ai { background: rgba(255, 255, 255, 0.1); align-self: flex-start; border-left: 2px solid #fff; }
-        .bubble.user { background: rgba(255, 255, 255, 0.05); align-self: flex-end; opacity: 0.8; }
+        /* Редактор и Чат */
+        #monaco-root { flex-grow: 1; overflow: hidden; border-radius: 0 0 10px 10px; }
+        .ai-wrap { flex-grow: 1; display: none; flex-direction: column; padding: 15px; }
+        .ai-wrap.active { display: flex; }
+        #chat-history { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .bubble { padding: 10px; border-radius: 8px; font-size: 0.85rem; max-width: 85%; line-height: 1.4; }
+        .bubble.ai { background: rgba(255,255,255,0.1); align-self: flex-start; border-left: 2px solid #fff; }
+        .bubble.user { background: rgba(255,255,255,0.05); align-self: flex-end; }
 
         /* Кнопки и Инпуты */
-        input, button { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); color: #fff; padding: 10px; border-radius: 8px; }
-        button { background: #fff; color: #000; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; font-size: 0.7rem; }
+        input, button, textarea { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); color: #fff; border-radius: 6px; padding: 10px; }
+        button { background: #fff; color: #000; font-weight: bold; cursor: pointer; border: none; font-size: 0.75rem; }
+        button.border { background: transparent; color: #fff; border: 1px solid #fff; }
         button:active { transform: scale(0.96); }
-        button.border { background: transparent; color: #fff; border: 1px solid var(--white); }
 
-        /* Авторизация */
-        .auth-box { max-width: 340px; margin: auto; padding: 30px; display: flex; flex-direction: column; gap: 15px; text-align: center; }
+        /* Центрирование форм */
+        .auth-container { max-width: 350px; margin: auto; padding: 30px; display: flex; flex-direction: column; gap: 15px; text-align: center; }
 
-        @media (max-width: 700px) {
-            .nav-links { gap: 15px; }
-            .tools button { flex: 1; min-width: 100px; }
+        @media (max-width: 750px) {
+            .nav-btn span { display: none; }
+            .top-nav { padding: 5px 10px; }
+            .grid { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
 <body>
 
-<canvas id="stars-bg"></canvas>
+<canvas id="stars"></canvas>
 
-<div class="app">
-    <nav class="glass">
-        <div style="font-weight: 800; letter-spacing: 2px;">TATAR HUB</div>
-        <div class="nav-links">
-            <i data-lucide="home" onclick="nav('home')" id="n-home"></i>
-            <i data-lucide="code" onclick="nav('editor')" id="n-editor"></i>
-            <i data-lucide="message-square" onclick="nav('ai')" id="n-ai"></i>
-            <i data-lucide="user" onclick="nav('auth')" id="n-auth"></i>
+<div class="app-shell">
+    <!-- ГЛАВНОЕ МЕНЮ СВЕРХУ -->
+    <nav class="top-nav glass">
+        <div style="font-weight: 800; letter-spacing: 1px;">TATAR HUB</div>
+        <div class="nav-tabs">
+            <button class="nav-btn active" onclick="nav('home', this)"><i data-lucide="search"></i><span>EXPLORE</span></button>
+            <button class="nav-btn" onclick="nav('editor', this)"><i data-lucide="code"></i><span>EDITOR</span></button>
+            <button class="nav-btn" onclick="nav('auth', this)"><i data-lucide="user"></i><span>ACCOUNT</span></button>
         </div>
     </nav>
 
-    <!-- ГЛАВНАЯ (ПОИСК) -->
-    <section id="page-home" class="page active">
-        <input type="text" class="glass search-area" id="search-input" placeholder="Search for scripts..." oninput="search()">
-        <div class="script-grid" id="global-list"></div>
-    </section>
+    <main class="main-content">
+        <!-- ГЛАВНАЯ: ПОИСК -->
+        <section id="p-home" class="page active">
+            <input type="text" id="global-search" class="glass search-box" placeholder="Search community scripts..." oninput="searchScripts()">
+            <div class="grid" id="script-grid"></div>
+        </section>
 
-    <!-- РЕДАКТОР -->
-    <section id="page-editor" class="page">
-        <div class="tools glass">
-            <input type="text" id="ed-name" placeholder="Script Name" style="flex: 2;">
-            <input type="password" id="ed-pass" placeholder="Password" style="flex: 1;">
-            <button onclick="deploy()">SAVE & SYNC</button>
-        </div>
-        <div id="monaco-editor"></div>
-        <div class="tools glass" style="justify-content: space-between;">
-            <button class="border" onclick="obfuscate()">SHIELD OBFUSCATE</button>
-            <button class="border" onclick="copyLoader()">COPY LINK</button>
-            <div id="user-status" style="font-size: 0.6rem; opacity: 0.5;">Guest</div>
-        </div>
-    </section>
-
-    <!-- ИИ ЧАТ -->
-    <section id="page-ai" class="page">
-        <div class="chat-wrap glass">
-            <div id="chat-content">
-                <div class="bubble ai">I am Tatar-AI. Ask me to write code or scan for viruses.</div>
+        <!-- РЕДАКТОР С ВКЛАДКАМИ -->
+        <section id="p-editor" class="page glass">
+            <div class="editor-header">
+                <div class="editor-tabs">
+                    <span class="e-tab active" onclick="eTab('code')">SCRIPT.LUA</span>
+                    <span class="e-tab" onclick="eTab('ai')">AI ASSISTANT</span>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <input type="text" id="ed-name" placeholder="Name" style="height:25px; font-size:10px; width:100px;">
+                    <input type="password" id="ed-pass" placeholder="Pass" style="height:25px; font-size:10px; width:80px;">
+                    <button onclick="deploy()" style="height:25px; padding:0 10px;">SAVE</button>
+                </div>
             </div>
-            <div style="display: flex; gap: 8px; margin-top: 10px;">
-                <input type="text" id="ai-input" placeholder="Ask AI..." style="flex: 1;">
-                <button onclick="askAI()">ASK</button>
+            
+            <div id="monaco-root"></div>
+            
+            <div id="ai-section" class="ai-wrap">
+                <div id="chat-history"></div>
+                <div style="display:flex; gap:8px; margin-top:10px;">
+                    <input type="text" id="ai-input" placeholder="Ask AI to write logic..." style="flex:1;">
+                    <button onclick="askAI()">GENERATE</button>
+                </div>
             </div>
-        </div>
-    </section>
 
-    <!-- АВТОРИЗАЦИЯ -->
-    <section id="page-auth" class="page">
-        <div class="auth-box glass" id="auth-ui">
-            <h3 id="auth-title">CLOUD LOGIN</h3>
-            <input type="text" id="user-login" placeholder="Username">
-            <input type="password" id="user-pass" placeholder="Password">
-            <button onclick="auth('login')">LOGIN</button>
-            <span style="font-size: 0.75rem; cursor: pointer; opacity: 0.6;" onclick="setAuthMode(true)">Create new account</span>
-        </div>
-    </section>
+            <div class="editor-header" style="border-top:1px solid var(--border); border-bottom:none;">
+                <div style="display:flex; gap:10px;">
+                    <button class="border" onclick="obfuscate()" style="height:25px;">OBFUSCATE</button>
+                    <button class="border" onclick="copyLink()" style="height:25px;">COPY LINK</button>
+                </div>
+                <div id="user-info" style="font-size: 10px; opacity:0.4;">Guest Mode</div>
+            </div>
+        </section>
+
+        <!-- АККАУНТ -->
+        <section id="p-auth" class="page">
+            <div class="auth-container glass" id="auth-ui">
+                <h2 id="auth-title">WELCOME</h2>
+                <input type="text" id="login-user" placeholder="Username">
+                <input type="password" id="login-pass" placeholder="Password">
+                <button onclick="authAction('login')">SIGN IN</button>
+                <span style="font-size:0.7rem; opacity:0.5; cursor:pointer;" onclick="toggleAuth(true)">New here? Create Account</span>
+            </div>
+        </section>
+    </main>
 </div>
 
 <script>
-    const CONFIG = {
+    // --- ДАННЫЕ ---
+    const DB = {
         TK: "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",
         RP: "SITEspinogrz/tatarscripts",
         OK: "d6eee16f-4aee-b083-6b0c-80fd3996c669e97b"
@@ -143,164 +156,172 @@
     lucide.createIcons();
 
     // --- ЗВЕЗДЫ ---
-    const canvas = document.getElementById('stars-bg');
+    const canvas = document.getElementById('stars');
     const ctx = canvas.getContext('2d');
-    function stars() {
+    function drawStars() {
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
         ctx.fillStyle = "#fff";
         for(let i=0; i<100; i++) {
             ctx.globalAlpha = Math.random();
-            ctx.beginPath(); ctx.arc(Math.random()*canvas.width, Math.random()*canvas.height, Math.random()*1.5, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(Math.random()*canvas.width, Math.random()*canvas.height, 1, 0, Math.PI*2); ctx.fill();
         }
-        setTimeout(() => requestAnimationFrame(stars), 150);
+        setTimeout(() => requestAnimationFrame(drawStars), 200);
     }
-    stars();
+    drawStars();
 
     // --- НАВИГАЦИЯ ---
-    function nav(id) {
+    function nav(page, btn) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-links i').forEach(i => i.classList.remove('active'));
-        document.getElementById('page-'+id).classList.add('active');
-        document.getElementById('n-'+id).classList.add('active');
-        if(id === 'home') syncGlobal();
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('p-'+page).classList.add('active');
+        btn.classList.add('active');
+        if(page === 'home') syncScripts();
     }
 
-    function setAuthMode(reg) {
-        document.getElementById('auth-title').innerText = reg ? "REGISTRATION" : "LOGIN";
-        const b = document.querySelector('#auth-ui button');
-        b.innerText = reg ? "REGISTER" : "LOGIN";
-        b.onclick = () => auth(reg ? 'reg' : 'login');
+    function eTab(type) {
+        document.querySelectorAll('.e-tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+        document.getElementById('monaco-root').style.display = (type === 'code' ? 'block' : 'none');
+        document.getElementById('ai-section').classList.toggle('active', type === 'ai');
+    }
+
+    function toggleAuth(reg) {
+        document.getElementById('auth-title').innerText = reg ? "REGISTER" : "WELCOME";
+        const btn = document.querySelector('#auth-ui button');
+        btn.innerText = reg ? "CREATE ACCOUNT" : "SIGN IN";
+        btn.onclick = () => authAction(reg ? 'reg' : 'login');
     }
 
     // --- МОНАКО ---
     require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs' } });
     require(['vs/editor/editor.main'], () => {
-        editor = monaco.editor.create(document.getElementById('monaco-editor'), {
-            value: "-- TATAR CLOUD EDITOR\nprint('Ready')",
-            language: 'lua', theme: 'vs-dark', fontSize: 14, automaticLayout: true, minimap: {enabled: false}
+        editor = monaco.editor.create(document.getElementById('monaco-root'), {
+            value: "-- TATAR CLOUD EDITOR\nprint('System Ready')",
+            language: 'lua', theme: 'vs-dark', fontSize: 13, automaticLayout: true, minimap: {enabled:false}
         });
     });
 
-    // --- LOGIN / REG ---
-    async function auth(mode) {
-        const u = document.getElementById('user-login').value;
-        const p = document.getElementById('user-pass').value;
-        if(!u || !p) return alert("Fill data");
+    // --- АВТОРИЗАЦИЯ ---
+    async function authAction(mode) {
+        const u = document.getElementById('login-user').value;
+        const p = document.getElementById('login-pass').value;
+        if(!u || !p) return alert("Missing data");
 
         const uH = CryptoJS.SHA256(u).toString();
         const pH = CryptoJS.SHA256(p).toString();
         const path = `users/${uH}.json`;
 
         if(mode === 'reg') {
-            const res = await fetch(`https://api.github.com/repos/${CONFIG.RP}/contents/${path}`, {
-                method: 'PUT', headers: {Authorization: `token ${CONFIG.TK}`},
-                body: JSON.stringify({message: "Reg", content: btoa(JSON.stringify({p: pH}))})
+            const res = await fetch(`https://api.github.com/repos/${DB.RP}/contents/${path}`, {
+                method: 'PUT', headers: {Authorization: `token ${DB.TK}`},
+                body: JSON.stringify({message: "User Reg", content: btoa(JSON.stringify({p: pH}))})
             });
-            if(res.ok) alert("Registered! Now Login.");
-            else alert("Error or User exists.");
+            if(res.ok) alert("Account Created! Please login.");
         } else {
-            const res = await fetch(`https://api.github.com/repos/${CONFIG.RP}/contents/${path}`, {
-                headers: {Authorization: `token ${CONFIG.TK}`}
+            const res = await fetch(`https://api.github.com/repos/${DB.RP}/contents/${path}`, {
+                headers: {Authorization: `token ${DB.TK}`}
             });
             if(res.ok) {
                 const data = JSON.parse(atob((await res.json()).content));
-                if(data.p === pH) { 
-                    currentUser = u; 
-                    document.getElementById('user-status').innerText = "Logged: " + u;
-                    alert("Welcome, " + u); nav('editor'); 
-                } else alert("Wrong Pass");
+                if(data.p === pH) {
+                    currentUser = u;
+                    document.getElementById('user-info').innerText = "Logged as: " + u;
+                    alert("Auth Success!");
+                    nav('editor', document.querySelector('[onclick*="editor"]'));
+                } else alert("Invalid Password");
             } else alert("User not found");
         }
     }
 
-    // --- SAVE & DEPLOY ---
+    // --- СОХРАНЕНИЕ / ОБНОВЛЕНИЕ ---
     async function deploy() {
         if(!currentUser) return alert("Login first!");
         const nm = document.getElementById('ed-name').value;
         const ps = document.getElementById('ed-pass').value;
-        if(!nm || !ps) return alert("Need name/pass");
-
         const code = editor.getValue();
-        // SECURITY SCAN
-        const danger = ["os.execute", "os.remove", "PostAsync", "gethwid", "crash"];
-        for(let d of danger) if(code.includes(d)) return alert("SECURITY ALERT: Malicious function found!");
 
+        // Security Scan
+        const danger = ["os.execute", "PostAsync", "os.remove", "gethwid"];
+        for(let d of danger) if(code.includes(d)) return alert("MALICIOUS CODE BLOCKED: " + d);
+
+        if(!nm || !ps) return alert("Fill Name/Password");
         const pH = CryptoJS.SHA256(ps).toString();
         const path = `scripts/${nm}.lua`;
-        const body = `-- [[ AUTH:${pH} | BY:${currentUser} ]]\n${code}`;
+        const body = `-- [[ AUTH:${pH} | USER:${currentUser} ]]\n${code}`;
 
-        const check = await fetch(`https://api.github.com/repos/${CONFIG.RP}/contents/${path}`, {
-            headers: {Authorization: `token ${CONFIG.TK}`}
+        const check = await fetch(`https://api.github.com/repos/${DB.RP}/contents/${path}`, {
+            headers: {Authorization: `token ${DB.TK}`}
         });
 
         let sha;
         if(check.ok) {
             const data = await check.json();
-            if(!atob(data.content).includes(pH)) return alert("Access Denied: Wrong project password!");
+            if(!atob(data.content).includes(pH)) return alert("Wrong project password!");
             sha = data.sha;
         }
 
-        const res = await fetch(`https://api.github.com/repos/${CONFIG.RP}/contents/${path}`, {
-            method: 'PUT', headers: {Authorization: `token ${CONFIG.TK}`},
+        const res = await fetch(`https://api.github.com/repos/${DB.RP}/contents/${path}`, {
+            method: 'PUT', headers: {Authorization: `token ${DB.TK}`},
             body: JSON.stringify({message: "Deploy "+nm, content: btoa(unescape(encodeURIComponent(body))), sha})
         });
-        if(res.ok) alert("Cloud Updated!");
+        if(res.ok) alert("Synced to Cloud!");
     }
 
-    // --- SEARCH ---
-    async function syncGlobal() {
-        const res = await fetch(`https://api.github.com/repos/${CONFIG.RP}/contents/scripts`, {
-            headers: {Authorization: `token ${CONFIG.TK}`}
+    // --- ПОИСК ---
+    async function syncScripts() {
+        const res = await fetch(`https://api.github.com/repos/${DB.RP}/contents/scripts`, {
+            headers: {Authorization: `token ${DB.TK}`}
         });
         if(res.ok) {
-            const files = await res.json();
-            window.allScripts = files;
-            render(files);
+            window.scripts = await res.json();
+            renderList(window.scripts);
         }
     }
 
-    function render(files) {
-        const list = document.getElementById('global-list'); list.innerHTML = '';
+    function renderList(files) {
+        const grid = document.getElementById('script-grid'); grid.innerHTML = '';
         files.forEach(f => {
-            const d = document.createElement('div'); d.className = 'glass card';
-            d.innerHTML = `<b>${f.name.replace('.lua','')}</b><br><small>Cloud</small>`;
-            d.onclick = () => load(f.path);
-            list.appendChild(d);
+            const d = document.createElement('div'); d.className = 'card glass';
+            d.innerHTML = `<b>${f.name.replace('.lua','')}</b><br><small style="opacity:0.5">Cloud Storage</small>`;
+            d.onclick = () => loadScript(f.path);
+            grid.appendChild(d);
         });
     }
 
-    async function load(p) {
-        const res = await fetch(`https://api.github.com/repos/${CONFIG.RP}/contents/${p}`, {
-            headers: {Authorization: `token ${CONFIG.TK}`}
+    async function loadScript(p) {
+        const res = await fetch(`https://api.github.com/repos/${DB.RP}/contents/${p}`, {
+            headers: {Authorization: `token ${DB.TK}`}
         });
         if(res.ok) {
             const data = await res.json();
             const raw = decodeURIComponent(escape(atob(data.content)));
             editor.setValue(raw.split('\n').slice(1).join('\n'));
             document.getElementById('ed-name').value = data.name.replace('.lua','');
-            nav('editor');
+            nav('editor', document.querySelector('[onclick*="editor"]'));
         }
     }
 
-    function search() {
-        const q = document.getElementById('search-input').value.toLowerCase();
-        render(window.allScripts.filter(f => f.name.toLowerCase().includes(q)));
+    function searchScripts() {
+        const q = document.getElementById('global-search').value.toLowerCase();
+        renderList(window.scripts.filter(f => f.name.toLowerCase().includes(q)));
     }
 
-    // --- AI ЧАТ (PUTER.JS) ---
+    // --- AI ---
     async function askAI() {
         const q = document.getElementById('ai-input').value; if(!q) return;
         addMsg('user', q); document.getElementById('ai-input').value = '';
-        
         try {
-            // Puter.js вызывает ИИ напрямую без ключа
-            const res = await puter.ai.chat("Answer as a Roblox Lua Expert: " + q);
+            const res = await puter.ai.chat("Explain or write Roblox Lua code for: " + q);
             addMsg('ai', res.toString());
-        } catch(e) { addMsg('ai', "Error connecting to Puter AI."); }
+            if(res.toString().includes("```lua")) {
+                const snip = res.toString().split("```lua")[1].split("```")[0];
+                editor.setValue(editor.getValue() + "\n\n-- AI Snippet:\n" + snip.trim());
+            }
+        } catch(e) { addMsg('ai', "AI Connection failed."); }
     }
 
     function addMsg(t, x) {
-        const c = document.getElementById('chat-content');
+        const c = document.getElementById('chat-history');
         const d = document.createElement('div'); d.className = `bubble ${t}`; d.innerText = x;
         c.appendChild(d); c.scrollTop = c.scrollHeight;
     }
@@ -308,18 +329,18 @@
     async function obfuscate() {
         try {
             const res = await fetch('https://luaobfuscator.com/api/obfuscator/newscript', {
-                method: 'POST', headers: {'Content-Type': 'application/json', apikey: CONFIG.OK},
+                method: 'POST', headers: {'Content-Type': 'application/json', apikey: DB.OK},
                 body: JSON.stringify({script: editor.getValue(), options: {Virtualize: true}})
             });
             const data = await res.json();
             if(data.code) editor.setValue(data.code);
-        } catch(e) { alert("Obfuscator Fail"); }
+        } catch(e) { alert("Obfuscator Offline"); }
     }
 
-    function copyLoader() {
+    function copyLink() {
         const nm = document.getElementById('ed-name').value;
-        navigator.clipboard.writeText(`loadstring(game:HttpGet("https://raw.githubusercontent.com/${CONFIG.RP}/main/scripts/${nm}.lua"))()`);
-        alert("Copied!");
+        navigator.clipboard.writeText(`loadstring(game:HttpGet("https://raw.githubusercontent.com/${DB.RP}/main/scripts/${nm}.lua"))()`);
+        alert("Loadstring copied!");
     }
 </script>
 </body>
