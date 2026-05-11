@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>TATAR SCRIPT HUB | PRO EDITION</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        :root { --glass: rgba(255, 255, 255, 0.07); --border: rgba(255, 255, 255, 0.15); --accent: #00d2ff; }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; background: #050505; color: white; overflow: hidden; }
+        
+        .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%); }
+        .star { position: absolute; background: white; border-radius: 50%; opacity: 0.5; animation: blink 3s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
+
+        .glass { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 12px; }
+        .container { display: grid; grid-template-columns: 260px 1fr 300px; height: 100vh; gap: 10px; padding: 10px; box-sizing: border-box; }
+        
+        .panel { display: flex; flex-direction: column; gap: 10px; padding: 15px; overflow: hidden; }
+        #editor-container { flex-grow: 1; border-radius: 8px; border: 1px solid var(--border); overflow: hidden; }
+
+        input, button, textarea { background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border); color: white; padding: 8px 12px; border-radius: 6px; outline: none; }
+        button { background: var(--accent); color: black; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; }
+        button:hover { background: #fff; box-shadow: 0 0 15px var(--accent); }
+
+        .project-item { padding: 8px; border-radius: 4px; cursor: pointer; border-bottom: 1px solid var(--border); font-size: 14px; }
+        .project-item:hover { background: rgba(255, 255, 255, 0.1); }
+        
+        #chat-messages { flex-grow: 1; overflow-y: auto; font-size: 13px; padding-right: 5px; }
+        .ai-msg { color: var(--accent); margin-bottom: 10px; }
+        .user-msg { color: #aaa; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="stars" id="star-field"></div>
+
+<div class="container">
+    <div class="panel glass">
+        <h3>МОИ ПРОЕКТЫ</h3>
+        <input type="text" id="gh-repo" placeholder="User/Repo_Name" onchange="saveSettings()">
+        <input type="password" id="gh-token" placeholder="GitHub Token" onchange="saveSettings()">
+        <div id="project-list" style="overflow-y: auto; flex-grow: 1;"></div>
+        <button onclick="loadProjectList()">ОБНОВИТЬ СПИСОК</button>
+    </div>
+
+    <div class="panel glass">
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="proj-name" style="flex-grow: 1;" placeholder="Название скрипта">
+            <input type="password" id="proj-pass" placeholder="Пароль">
+            <button onclick="publish()">СОХРАНИТЬ</button>
+        </div>
+        <div id="editor-container"></div>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="obfuscate()" style="background: #e67e22;">ОБФУСКАЦИЯ</button>
+            <button onclick="copyLoad()" style="background: #2ecc71;">КОПИРОВАТЬ LOADSTRING</button>
+        </div>
+    </div>
+
+    <div class="panel glass">
+        <h3>AI СОВЕТНИК</h3>
+        <div id="chat-messages"></div>
+        <textarea id="ai-input" placeholder="Напиши, что добавить в код..."></textarea>
+        <button onclick="askAI()">СПРОСИТЬ ИИ</button>
+    </div>
+</div>
+
+<script>
+    let editor;
+    const OBF_KEY = "d6eee16f-4aee-b083-6b0c-80fd3996c669e97b";
+
+    // Инициализация редактора
+    require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs' } });
+    require(['vs/editor/editor.main'], function () {
+        editor = monaco.editor.create(document.getElementById('editor-container'), {
+            value: '-- TATAR SCRIPT HUB\nprint("Hello World")',
+            language: 'lua', theme: 'vs-dark', fontSize: 14, automaticLayout: true
+        });
+        loadSettings();
+    });
+
+    // Звезды
+    for (let i = 0; i < 100; i++) {
+        let s = document.createElement('div'); s.className = 'star';
+        s.style.width = s.style.height = Math.random() * 3 + 'px';
+        s.style.top = Math.random() * 100 + '%'; s.style.left = Math.random() * 100 + '%';
+        document.getElementById('star-field').appendChild(s);
+    }
+
+    // Сохранение настроек локально
+    function saveSettings() {
+        localStorage.setItem('tatar_gh_token', document.getElementById('gh-token').value);
+        localStorage.setItem('tatar_gh_repo', document.getElementById('gh-repo').value);
+    }
+
+    function loadSettings() {
+        document.getElementById('gh-token').value = localStorage.getItem('tatar_gh_token') || '';
+        document.getElementById('gh-repo').value = localStorage.getItem('tatar_gh_repo') || '';
+        if(document.getElementById('gh-repo').value) loadProjectList();
+    }
+
+    // Работа с GitHub
+    async function publish() {
+        const token = document.getElementById('gh-token').value;
+        const repo = document.getElementById('gh-repo').value;
+        const name = document.getElementById('proj-name').value;
+        const pass = document.getElementById('proj-pass').value;
+        const code = editor.getValue();
+
+        if(!token || !repo || !name || !pass) return alert("Заполни все поля!");
+
+        const hashedPass = CryptoJS.SHA256(pass).toString();
+        const finalContent = `-- Auth: ${hashedPass}\n${code}`;
+        const path = `scripts/${name}.lua`;
+
+        try {
+            let sha;
+            const check = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
+                headers: { 'Authorization': `token ${token}` }
+            });
+
+            if (check.ok) {
+                const data = await check.json();
+                const currentFile = atob(data.content);
+                if (!currentFile.includes(hashedPass)) return alert("Неверный пароль проекта!");
+                sha = data.sha;
+            }
+
+            const res = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
+                method: 'PUT',
+                headers: { 'Authorization': `token ${token}` },
+                body: JSON.stringify({
+                    message: "Update via TatarHub",
+                    content: btoa(unescape(encodeURIComponent(finalContent))),
+                    sha: sha
+                })
+            });
+
+            if(res.ok) alert("Опубликовано!");
+            else alert("Ошибка GitHub. Проверь токен и права записи.");
+        } catch(e) { alert(e); }
+        loadProjectList();
+    }
+
+    async function loadProjectList() {
+        const token = document.getElementById('gh-token').value;
+        const repo = document.getElementById('gh-repo').value;
+        if (!token || !repo) return;
+
+        const res = await fetch(`https://api.github.com/repos/${repo}/contents/scripts`, {
+            headers: { 'Authorization': `token ${token}` }
+        });
+        if(res.ok) {
+            const files = await res.json();
+            const list = document.getElementById('project-list');
+            list.innerHTML = '';
+            files.forEach(f => {
+                let d = document.createElement('div'); d.className = 'project-item';
+                d.innerText = f.name.replace('.lua', '');
+                d.onclick = () => loadFile(f.path);
+                list.appendChild(d);
+            });
+        }
+    }
+
+    async function loadFile(path) {
+        const token = document.getElementById('gh-token').value;
+        const repo = document.getElementById('gh-repo').value;
+        const res = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
+            headers: { 'Authorization': `token ${token}` }
+        });
+        if(res.ok) {
+            const data = await res.json();
+            let content = decodeURIComponent(escape(atob(data.content)));
+            editor.setValue(content.split('\n').slice(1).join('\n'));
+            document.getElementById('proj-name').value = data.name.replace('.lua', '');
+        }
+    }
+
+    // Обфускация
+    async function obfuscate() {
+        const code = editor.getValue();
+        try {
+            const res = await fetch('https://luaobfuscator.com/api/obfuscator/newscript', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'apikey': OBF_KEY },
+                body: JSON.stringify({ script: code, options: { "Virtualize": true } })
+            });
+            const data = await res.json();
+            if(data.code) editor.setValue(data.code);
+        } catch(e) { alert("Ошибка обфускации"); }
+    }
+
+    // ИИ (Без ключа)
+    async function askAI() {
+        const input = document.getElementById('ai-input').value;
+        if(!input) return;
+        addChat("User", input);
+        document.getElementById('ai-input').value = '';
+
+        try {
+            const res = await fetch('https://api-inference.huggingface.co/models/bigcode/starcoder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ inputs: "-- Lua language\n-- Question: " + input + "\n-- Code:" })
+            });
+            const data = await res.json();
+            addChat("AI", data[0].generated_text.substring(0, 500));
+        } catch(e) { addChat("AI", "ИИ занят, попробуй позже."); }
+    }
+
+    function addChat(u, t) {
+        const m = document.getElementById('chat-messages');
+        let d = document.createElement('div');
+        d.className = u === "AI" ? 'ai-msg' : 'user-msg';
+        d.innerText = u + ": " + t;
+        m.appendChild(d);
+        m.scrollTop = m.scrollHeight;
+    }
+
+    function copyLoad() {
+        const repo = document.getElementById('gh-repo').value;
+        const name = document.getElementById('proj-name').value;
+        const url = `https://raw.githubusercontent.com/${repo}/main/scripts/${name}.lua`;
+        navigator.clipboard.writeText(`loadstring(game:HttpGet("${url}"))()`);
+        alert("Loadstring в буфере!");
+    }
+</script>
+</body>
+  </html>
